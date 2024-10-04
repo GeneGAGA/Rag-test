@@ -27,7 +27,7 @@ def create_bedrock_execution_role(bucket_name):
             {
                 "Effect": "Allow",
                 "Action": [
-                    "bedrock:InvokeModel",
+                    "bedrock:InvokeModel"
                 ],
                 "Resource": [
                     f"arn:aws:bedrock:{region_name}::foundation-model/amazon.titan-embed-text-v1"
@@ -70,25 +70,43 @@ def create_bedrock_execution_role(bucket_name):
             }
         ]
     }
-    # create policies based on the policy documents
-    fm_policy = iam_client.create_policy(
-        PolicyName=fm_policy_name,
-        PolicyDocument=json.dumps(foundation_model_policy_document),
-        Description='Policy for accessing foundation model',
-    )
+    # # create policies based on the policy documents
+    # fm_policy = iam_client.create_policy(
+    #     PolicyName=fm_policy_name,
+    #     PolicyDocument=json.dumps(foundation_model_policy_document),
+    #     Description='Policy for accessing foundation model',
+    # )
 
-    s3_policy = iam_client.create_policy(
+    try:
+        fm_policy = iam_client.create_policy(
+            PolicyName=fm_policy_name,
+            PolicyDocument=json.dumps(foundation_model_policy_document),
+            Description='Policy for accessing foundation model'
+    )
+    except Exception as e:
+        print(f"Error creating foundation model policy: {str(e)}")
+        raise
+
+    try:
+        s3_policy = iam_client.create_policy(
         PolicyName=s3_policy_name,
         PolicyDocument=json.dumps(s3_policy_document),
         Description='Policy for reading documents from s3')
+    except Exception as e:
+        print(f"Error creating foundation model policy: {str(e)}")
+        raise
 
     # create bedrock execution role
-    bedrock_kb_execution_role = iam_client.create_role(
+    try:
+        bedrock_kb_execution_role = iam_client.create_role(
         RoleName=bedrock_execution_role_name,
         AssumeRolePolicyDocument=json.dumps(assume_role_policy_document),
         Description='Amazon Bedrock Knowledge Base Execution Role for accessing OSS and S3',
         MaxSessionDuration=3600
     )
+    except Exception as e:
+        print(f"Error creating foundation model policy: {str(e)}")
+        raise
 
     # fetch arn of the policies and role created above
     bedrock_kb_execution_role_arn = bedrock_kb_execution_role['Role']['Arn']
